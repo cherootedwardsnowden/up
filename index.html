@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MetaUpload - Fast File Hosting</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%23e8322a'/><text x='50%25' y='70%25' text-anchor='middle' font-size='20' font-family='Arial' font-weight='bold' fill='white'>M</text></svg>">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/video.js/8.6.1/video-js.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/video.js/8.6.1/video-js.min.css">
+<style>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--red:#e8322a;--red2:#c0271f;--dark:#1a1a1a;--darker:#111;--mid:#2a2a2a;--border:#3a3a3a;--border2:#444;--text:#ccc;--text2:#999;--text3:#777;--gold:#f5a623;--green:#4caf50;--blue:#4a90d9;--bg:#1e1e1e}
+body{background:var(--bg);color:var(--text);font-family:Tahoma,Arial,sans-serif;font-size:13px;min-height:100vh;padding-bottom:40px}
+a{color:var(--red);text-decoration:none}a:hover{text-decoration:underline;color:#ff4a42}
+/* TOP BAR */
+#topbar{background:#111;border-bottom:1px solid #2a0000;padding:0 0;display:flex;align-items:stretch;height:36px}
+#logo{background:linear-gradient(180deg,#e8322a 0%,#9b1a15 100%);padding:0 20px;display:flex;align-items:center;font-size:18px;font-weight:bold;color:#fff;font-family:Impact,Arial Narrow,sans-serif;letter-spacing:1px;border-right:2px solid #6a1010;text-shadow:1px 1px 2px #000;cursor:pointer}
+#logo span{color:#ffcc00;margin-left:2px}
+#topnav{display:flex;align-items:center;padding:0 10px;gap:2px;flex:1}
+#topnav a{color:#bbb;padding:0 10px;height:36px;display:flex;align-items:center;font-size:12px;border-right:1px solid #222;transition:background .15s}
+#topnav a:hover{background:#2a0000;color:#fff;text-decoration:none}
+#topright{display:flex;align-items:center;padding:0 10px;gap:8px;margin-left:auto}
+#topright button{background:linear-gradient(180deg,#e8322a,#9b1a15);border:1px solid #6a1010;color:#fff;padding:4px 14px;font-size:11px;cursor:pointer;font-family:Tahoma,Arial,sans-serif}
+#topright button:hover{background:linear-gradient(180deg,#ff4a42,#c0271f)}
+#topright button.ghost{background:linear-gradient(180deg,#333,#222);border-color:#444}
+#topright button.ghost:hover{background:linear-gradient(180deg,#444,#333)}
+#userinfo{color:#bbb;font-size:11px;display:flex;align-items:center;gap:6px}
+.role-badge{padding:1px 6px;font-size:10px;font-weight:bold;border-radius:2px;text-transform:uppercase}
+.role-owner{background:#9b1a15;color:#ffcc00;border:1px solid #c0271f}
+.role-mod{background:#1a4a9b;color:#aaccff;border:1px solid #2a5abd}
+.role-vip{background:#7a5500;color:#f5a623;border:1px solid #c08a00}
+.role-free{background:#333;color:#888;border:1px solid #444}
+/* CONTENT */
+#wrap{max-width:980px;margin:0 auto;padding:12px 10px}
+/* NOTICE BAR */
+.noticebar{background:linear-gradient(180deg,#2a1a00,#1a1000);border:1px solid #5a3a00;border-radius:2px;padding:8px 14px;margin-bottom:10px;color:#f5a623;font-size:12px;display:none}
+.noticebar.show{display:block}
+/* BOXES */
+.box{background:linear-gradient(180deg,#262626,#1e1e1e);border:1px solid var(--border);border-radius:3px;margin-bottom:10px}
+.box-head{background:linear-gradient(180deg,#333,#252525);border-bottom:1px solid var(--border);padding:7px 12px;font-size:12px;font-weight:bold;color:#ddd;display:flex;align-items:center;gap:8px;border-radius:3px 3px 0 0}
+.box-head .ico{color:var(--red)}
+.box-body{padding:12px}
+/* UPLOAD BOX */
+#upload-zone{border:2px dashed #3a3a3a;border-radius:3px;padding:30px 20px;text-align:center;cursor:pointer;transition:all .2s;background:#1a1a1a;position:relative;overflow:hidden}
+#upload-zone:hover,#upload-zone.drag{border-color:var(--red);background:#200a0a}
+#upload-zone.drag::after{content:"DROP FILE";position:absolute;inset:0;background:rgba(232,50,42,.15);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:bold;color:var(--red);letter-spacing:4px}
+#upload-zone .ico-big{font-size:42px;color:#444;display:block;margin-bottom:10px}
+#upload-zone p{color:#666;font-size:13px}
+#upload-zone p span{color:var(--red)}
+#upload-zone small{color:#555;font-size:11px;display:block;margin-top:5px}
+#file-input{display:none}
+/* UPLOAD BTN */
+.btn{display:inline-block;padding:6px 20px;cursor:pointer;font-size:12px;font-family:Tahoma,Arial,sans-serif;border-radius:2px;border:none;transition:all .1s;font-weight:bold}
+.btn-red{background:linear-gradient(180deg,#e8322a 0%,#9b1a15 100%);border:1px solid #6a1010;color:#fff;text-shadow:0 1px 1px #000}
+.btn-red:hover{background:linear-gradient(180deg,#ff4a42,#c0271f)}
+.btn-gray{background:linear-gradient(180deg,#3d3d3d,#2a2a2a);border:1px solid #4a4a4a;color:#ccc}
+.btn-gray:hover{background:linear-gradient(180deg,#4a4a4a,#363636)}
+.btn-gold{background:linear-gradient(180deg,#f5a623,#c47800);border:1px solid #c47800;color:#fff}
+.btn-gold:hover{background:linear-gradient(180deg,#ffb83a,#d98a00)}
+.btn-sm{padding:3px 10px;font-size:11px}
+.btn-green{background:linear-gradient(180deg,#4caf50,#2e7d32);border:1px solid #2e7d32;color:#fff}
+/* PROGRESS */
+#prog-wrap{display:none;margin-top:12px}
+.prog-bar{width:100%;height:18px;background:#111;border:1px solid #333;border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,#9b1a15,#e8322a);transition:width .2s;position:relative}
+.prog-fill::after{content:'';position:absolute;top:0;left:0;right:0;height:8px;background:rgba(255,255,255,.08)}
+#prog-text{text-align:center;color:#888;font-size:11px;margin-top:4px}
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:12px}
+.tab{padding:7px 16px;font-size:12px;cursor:pointer;color:#888;border:1px solid transparent;border-bottom:none;margin-bottom:-1px;border-radius:2px 2px 0 0}
+.tab:hover{color:#ccc}
+.tab.active{background:#1e1e1e;border-color:var(--border);color:#eee;border-bottom-color:#1e1e1e}
+.tab-content{display:none}
+.tab-content.active{display:block}
+/* FILES GRID */
+.files-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.file-card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:3px;overflow:hidden;cursor:pointer;transition:border-color .15s,transform .1s;position:relative}
+.file-card:hover{border-color:#555;transform:translateY(-1px)}
+.file-thumb{width:100%;height:110px;background:#111;position:relative;overflow:hidden}
+.file-thumb img{width:100%;height:100%;object-fit:cover}
+.file-thumb .no-thumb{display:flex;align-items:center;justify-content:center;height:100%;color:#333;font-size:36px}
+.file-thumb .play-ico{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:36px;height:36px;background:rgba(232,50,42,.85);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;pointer-events:none}
+.file-prem{position:absolute;top:4px;right:4px;background:rgba(245,166,35,.9);color:#000;font-size:9px;font-weight:bold;padding:1px 5px;border-radius:2px}
+.file-info{padding:6px 8px}
+.file-name{font-size:11px;color:#ccc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px}
+.file-meta{font-size:10px;color:#555;display:flex;justify-content:space-between}
+/* MODAL */
+#modal-wrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center}
+#modal-wrap.show{display:flex}
+#modal{background:#1e1e1e;border:1px solid #3a3a3a;border-radius:3px;width:700px;max-width:96vw;max-height:92vh;overflow-y:auto;position:relative}
+#modal-close{position:absolute;top:8px;right:10px;color:#888;font-size:18px;cursor:pointer;z-index:10}
+#modal-close:hover{color:#fff}
+#modal-body{padding:16px}
+/* VIDEO PLAYER */
+.video-wrap{background:#000;border-radius:2px;overflow:hidden;position:relative}
+.video-wrap video{width:100%;display:block;max-height:420px}
+.vip-overlay{position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.97) 100%);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:24px}
+.vip-msg{color:#f5a623;font-size:14px;font-weight:bold;text-shadow:0 1px 4px #000;margin-bottom:10px;text-align:center}
+.vip-msg small{display:block;color:#888;font-size:11px;font-weight:normal;margin-top:2px}
+/* AUTH FORMS */
+.form-row{margin-bottom:10px}
+.form-row label{display:block;color:#999;font-size:11px;margin-bottom:4px}
+.form-row input{width:100%;background:#111;border:1px solid #333;color:#ddd;padding:6px 10px;font-size:13px;font-family:Tahoma,Arial,sans-serif;border-radius:2px;outline:none}
+.form-row input:focus{border-color:var(--red)}
+.form-row input::placeholder{color:#444}
+.err-msg{color:#ff6b6b;font-size:11px;margin-top:4px;display:none}
+.err-msg.show{display:block}
+.ok-msg{color:#4caf50;font-size:11px;margin-top:4px;display:none}
+.ok-msg.show{display:block}
+/* LINK BOX */
+.link-box{background:#111;border:1px solid #2a2a2a;border-radius:2px;padding:8px 10px;font-family:monospace;font-size:12px;color:#aaa;word-break:break-all;margin:8px 0;cursor:pointer;transition:border-color .15s}
+.link-box:hover{border-color:#555;color:#ddd}
+/* TABLE */
+table.admin{width:100%;border-collapse:collapse;font-size:12px}
+table.admin th{background:#252525;border:1px solid #333;padding:5px 8px;color:#aaa;font-weight:bold;text-align:left}
+table.admin td{border:1px solid #2a2a2a;padding:5px 8px;color:#bbb;vertical-align:middle}
+table.admin tr:hover td{background:#202020}
+/* STATS CARDS */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.stat-card{background:linear-gradient(180deg,#252525,#1a1a1a);border:1px solid #333;border-radius:3px;padding:10px;text-align:center}
+.stat-card .num{font-size:22px;font-weight:bold;color:#e8322a}
+.stat-card .lbl{font-size:10px;color:#666;margin-top:2px}
+/* SIDEBAR */
+#layout{display:grid;grid-template-columns:1fr 200px;gap:10px}
+#sidebar .sbox{background:linear-gradient(180deg,#262626,#1e1e1e);border:1px solid var(--border);border-radius:3px;margin-bottom:8px}
+#sidebar .sbox-head{background:linear-gradient(180deg,#333,#252525);border-bottom:1px solid var(--border);padding:5px 10px;font-size:11px;font-weight:bold;color:#ddd;border-radius:3px 3px 0 0}
+#sidebar .sbox-body{padding:8px}
+.vip-promo{background:linear-gradient(180deg,#2a1a00,#1a1000);border:1px solid #5a3a00}
+.vip-promo .sbox-head{background:linear-gradient(180deg,#5a3a00,#3a2000);border-color:#7a5000}
+.vip-promo .sbox-body{font-size:11px;color:#bbb;line-height:1.7}
+.vip-promo .sbox-body li{margin-left:14px;color:#ccc}
+.vip-promo .sbox-body strong{color:#f5a623}
+/* TOAST */
+#toast{position:fixed;bottom:20px;right:20px;background:#1e1e1e;border:1px solid #3a3a3a;border-radius:3px;padding:10px 16px;color:#ccc;font-size:12px;z-index:99999;opacity:0;transform:translateY(10px);transition:all .3s;max-width:300px}
+#toast.show{opacity:1;transform:translateY(0)}
+#toast.ok{border-color:#2e7d32;color:#4caf50}
+#toast.err{border-color:#c0271f;color:#ff6b6b}
+/* VIDEO.JS CUSTOM THEME */
+.video-js .vjs-big-play-button{background:rgba(232,50,42,.85)!important;border:none!important;border-radius:50%!important;width:60px!important;height:60px!important;line-height:60px!important;top:50%!important;left:50%!important;transform:translate(-50%,-50%)!important;transition:background .2s!important}
+.video-js:hover .vjs-big-play-button{background:rgba(255,74,66,.95)!important}
+.video-js .vjs-control-bar{background:linear-gradient(0deg,rgba(0,0,0,.9),transparent)!important;padding:0 6px!important}
+.video-js .vjs-play-progress,.video-js .vjs-volume-level{background:#e8322a!important}
+.video-js .vjs-progress-holder{height:5px!important}
+.video-js .vjs-slider{background:rgba(255,255,255,.15)!important}
+.vjs-heatmap-bar{position:absolute;bottom:36px;left:0;right:0;height:4px;pointer-events:none;z-index:5}
+.vjs-heatmap-bar canvas{width:100%;height:4px;display:block}
+/* WATCH STATS */
+.watch-heatmap-container{margin-top:14px;background:#111;border:1px solid #222;border-radius:2px;padding:10px}
+.watch-heatmap-title{font-size:11px;color:#888;margin-bottom:8px}
+canvas#admin-heatmap{width:100%;height:40px;display:block;border-radius:2px}
+.user-watch-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:11px}
+.user-watch-name{color:#4a90d9;width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0}
+.user-watch-bar{flex:1;height:6px;background:#222;border-radius:3px;overflow:hidden}
+.user-watch-fill{height:100%;background:linear-gradient(90deg,#4a90d9,#e8322a);border-radius:3px}
+/* FOOTER */
+#footer{text-align:center;color:#444;font-size:11px;margin-top:20px;padding-top:10px;border-top:1px solid #222}
+/* ADMIN PANEL SECTIONS */
+.adm-section{display:none}
+.adm-section.active{display:block}
+.adm-tabs{display:flex;gap:2px;margin-bottom:12px;flex-wrap:wrap}
+.adm-tab{padding:5px 14px;font-size:11px;background:#252525;border:1px solid #333;color:#888;cursor:pointer;border-radius:2px}
+.adm-tab:hover{color:#ccc}
+.adm-tab.active{background:#9b1a15;border-color:#c0271f;color:#fff}
+/* TOGGLE SWITCH */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #252525}
+.toggle-row:last-child{border-bottom:none}
+.toggle-row label{color:#ccc;font-size:12px}
+.toggle-row small{color:#666;font-size:10px;display:block}
+.toggle{width:36px;height:20px;background:#333;border:1px solid #444;border-radius:10px;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.toggle.on{background:#9b1a15;border-color:#c0271f}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;background:#ccc;border-radius:50%;transition:left .2s}
+.toggle.on::after{left:18px;background:#fff}
+/* COPY NOTIF */
+.copied{position:absolute;top:-20px;left:50%;transform:translateX(-50%);background:#333;color:#aaa;font-size:10px;padding:2px 8px;border-radius:2px;white-space:nowrap;opacity:0;transition:opacity .2s;pointer-events:none}
+.copied.show{opacity:1}
+/* PREMIUM LOCK */
+.prem-lock{display:inline-block;background:#7a5500;border:1px solid #c08a00;color:#f5a623;font-size:9px;font-weight:bold;padding:1px 5px;border-radius:2px;margin-left:4px;vertical-align:middle}
+@media(max-width:640px){#layout{grid-template-columns:1fr}#sidebar{display:none}.stats-row{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div id="logo" onclick="showSection('home')">Meta<span>Upload</span></div>
+  <div id="topnav">
+    <a href="#" onclick="showSection('home');return false">&#8962; Home</a>
+    <a href="#" onclick="showSection('upload');return false">&#8679; Upload</a>
+    <a href="#" id="myfiles-link" onclick="showSection('myfiles');return false" style="display:none">&#9783; My Files</a>
+    <a href="#" id="admin-link" onclick="showSection('admin');return false" style="display:none">&#9881; Panel</a>
+    <a href="#" onclick="showSection('vip');return false">&#9733; VIP</a>
+  </div>
+  <div id="topright">
+    <div id="userinfo" style="display:none">
+      <span id="ui-username"></span>
+      <span id="ui-rolebadge" class="role-badge"></span>
+      <span id="ui-quota" style="font-size:10px;color:#666"></span>
+      <button class="ghost btn-sm" onclick="doLogout()">Logout</button>
+    </div>
+    <div id="guestinfo">
+      <button onclick="openAuth('login')">Login</button>
+      <button class="ghost" onclick="openAuth('register')">Register</button>
+    </div>
+  </div>
+</div>
+
+<div id="wrap">
+  <div id="notice-maintenance" class="noticebar">&#9888; Site is currently under maintenance. Admin access only.</div>
+  <div id="notice-premium" class="noticebar" style="color:#f5a623">&#9733; Premium mode is active. Video previews are limited to 15 seconds for non-VIP users.</div>
+
+  <!-- HOME -->
+  <div id="sec-home" class="section">
+    <div id="layout">
+      <div id="main-col">
+        <div class="box">
+          <div class="box-head"><span class="ico">&#8679;</span> Upload File</div>
+          <div class="box-body">
+            <div id="upload-zone" onclick="document.getElementById('file-input').click()" ondragover="return false" ondragenter="this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="handleDrop(event)">
+              <span class="ico-big">&#128190;</span>
+              <p>Click to select or <span>drag & drop</span> your file here</p>
+              <small>Images, GIFs, Videos &#8226; Free: 30MB/day &#8226; VIP: 1GB/day</small>
+            </div>
+            <!-- File selected preview -->
+            <div id="file-selected-info" style="display:none;margin-top:8px;padding:8px 12px;background:#111;border:1px solid #2a2a2a;border-radius:2px;display:none;align-items:center;justify-content:space-between;gap:8px">
+              <span id="file-selected-name" style="font-size:12px;color:#ccc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+              <span id="file-selected-size" style="font-size:11px;color:#666;flex-shrink:0"></span>
+              <button onclick="clearSelectedFile()" style="background:none;border:none;color:#555;cursor:pointer;font-size:14px;flex-shrink:0;padding:0 4px" title="Clear">&#10005;</button>
+            </div>
+            <input type="file" id="file-input" accept="image/*,video/*" onchange="handleFile(this.files[0])">
+            <!-- Premium toggle: always visible, disabled for non-video / when premium mode off -->
+            <div style="margin-top:10px;padding:10px 12px;background:#161616;border:1px solid #2a2a2a;border-radius:2px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <span style="color:#ccc;font-size:12px;font-weight:bold">&#9733; Mark as Premium</span>
+                <span id="prem-toggle-hint" style="color:#555;font-size:10px">Enable premium mode in config to use this feature</span>
+              </div>
+              <label id="prem-switch-label" style="display:flex;align-items:center;gap:8px;cursor:not-allowed;opacity:0.4" title="Premium mode must be enabled by admin">
+                <input type="checkbox" id="mark-premium" disabled style="display:none">
+                <div id="prem-switch" style="width:42px;height:22px;background:#222;border:1px solid #444;border-radius:11px;position:relative;transition:background .2s;flex-shrink:0">
+                  <div id="prem-switch-knob" style="position:absolute;top:3px;left:3px;width:14px;height:14px;background:#555;border-radius:50%;transition:left .2s,background .2s"></div>
+                </div>
+                <span id="prem-switch-txt" style="font-size:11px;color:#555;white-space:nowrap">Off</span>
+              </label>
+            </div>
+            <!-- Upload button: only shown after file selected -->
+            <div id="upload-btn-wrap" style="display:none;margin-top:10px">
+              <button class="btn btn-red" onclick="startUpload()" style="width:100%;padding:9px;font-size:13px">&#8679; Upload File</button>
+            </div>
+            <div id="prog-wrap" style="display:none;margin-top:12px">
+              <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+              <div id="prog-text">Uploading... 0%</div>
+            </div>
+            <div id="upload-result" style="display:none;margin-top:12px">
+              <div style="color:#4caf50;font-size:12px;margin-bottom:6px">&#10003; File uploaded successfully!</div>
+              <div class="link-box" id="result-link" onclick="copyLink(this)" title="Click to copy">
+                <span class="copied" id="link-copied">Copied!</span>
+              </div>
+              <div id="prem-warning" style="display:none;color:#f5a623;font-size:11px;margin-top:6px">&#9733; This video is marked as premium. Non-VIP users will only see a 15-second preview.</div>
+            </div>
+          </div>
+        </div>
+        <div class="box">
+          <div class="box-head"><span class="ico">&#9783;</span> Recent Uploads</div>
+          <div class="box-body">
+            <div id="recent-files" class="files-grid"><div style="color:#555;font-size:12px;text-align:center;padding:20px;width:100%">Loading...</div></div>
+          </div>
+        </div>
+      </div>
+      <div id="sidebar">
+        <div class="sbox">
+          <div class="sbox-head">&#9888; Site Info</div>
+          <div class="sbox-body" style="font-size:11px;color:#888;line-height:1.8">
+            <div>&#8226; Free accounts: 30MB/day</div>
+            <div>&#8226; VIP accounts: 1GB/day</div>
+            <div>&#8226; Supported: Images, GIFs, Videos</div>
+            <div>&#8226; Direct links available</div>
+            <div>&#8226; Hover preview on videos</div>
+          </div>
+        </div>
+        <div class="sbox vip-promo">
+          <div class="sbox-head">&#9733; Go VIP</div>
+          <div class="sbox-body">
+            <strong>VIP Benefits:</strong>
+            <ul style="margin-top:6px">
+              <li>1GB daily upload</li>
+              <li>Unlimited video playback</li>
+              <li>Priority support</li>
+              <li>No ads</li>
+            </ul>
+            <div style="margin-top:8px">
+              <button class="btn btn-gold" style="width:100%" onclick="showSection('vip')">Get VIP</button>
+            </div>
+          </div>
+        </div>
+        <div class="sbox">
+          <div class="sbox-head">&#128202; Stats</div>
+          <div class="sbox-body" id="sidebar-stats" style="font-size:11px;color:#888;line-height:1.8">Loading...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- UPLOAD -->
+  <div id="sec-upload" class="section" style="display:none">
+    <div class="box">
+      <div class="box-head"><span class="ico">&#8679;</span> Upload File</div>
+      <div class="box-body">
+        <div id="upload-zone2" onclick="document.getElementById('file-input2').click()" ondragover="return false" ondragenter="this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="handleDrop2(event)" style="border:2px dashed #3a3a3a;border-radius:3px;padding:40px 20px;text-align:center;cursor:pointer;background:#1a1a1a">
+          <span class="ico-big">&#128190;</span>
+          <p>Click to select or <span style="color:var(--red)">drag & drop</span> your file</p>
+          <small style="color:#555;display:block;margin-top:5px">Images, GIFs, Videos supported</small>
+        </div>
+        <!-- File selected preview -->
+        <div id="file-selected-info2" style="display:none;margin-top:8px;padding:8px 12px;background:#111;border:1px solid #2a2a2a;border-radius:2px;align-items:center;justify-content:space-between;gap:8px">
+          <span id="file-selected-name2" style="font-size:12px;color:#ccc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+          <span id="file-selected-size2" style="font-size:11px;color:#666;flex-shrink:0"></span>
+          <button onclick="clearSelectedFile()" style="background:none;border:none;color:#555;cursor:pointer;font-size:14px;flex-shrink:0;padding:0 4px" title="Clear">&#10005;</button>
+        </div>
+        <input type="file" id="file-input2" accept="image/*,video/*" onchange="handleFile(this.files[0])">
+        <div style="margin-top:10px;padding:10px 12px;background:#161616;border:1px solid #2a2a2a;border-radius:2px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <span style="color:#ccc;font-size:12px;font-weight:bold">&#9733; Mark as Premium</span>
+            <span id="prem-toggle-hint2" style="color:#555;font-size:10px">Enable premium mode in config to use this feature</span>
+          </div>
+          <label id="prem-switch-label2" style="display:flex;align-items:center;gap:8px;cursor:not-allowed;opacity:0.4" title="Premium mode must be enabled by admin">
+            <input type="checkbox" id="mark-premium2" disabled style="display:none">
+            <div id="prem-switch2" style="width:42px;height:22px;background:#222;border:1px solid #444;border-radius:11px;position:relative;transition:background .2s;flex-shrink:0">
+              <div id="prem-switch-knob2" style="position:absolute;top:3px;left:3px;width:14px;height:14px;background:#555;border-radius:50%;transition:left .2s,background .2s"></div>
+            </div>
+            <span id="prem-switch-txt2" style="font-size:11px;color:#555;white-space:nowrap">Off</span>
+          </label>
+        </div>
+        <!-- Upload button -->
+        <div id="upload-btn-wrap2" style="display:none;margin-top:10px">
+          <button class="btn btn-red" onclick="startUpload()" style="width:100%;padding:9px;font-size:13px">&#8679; Upload File</button>
+        </div>
+        <div id="prog-wrap2" style="display:none;margin-top:12px">
+          <div class="prog-bar"><div class="prog-fill" id="prog-fill2" style="width:0%"></div></div>
+          <div id="prog-text2" style="text-align:center;color:#888;font-size:11px;margin-top:4px">Uploading... 0%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MY FILES -->
+  <div id="sec-myfiles" class="section" style="display:none">
+    <div class="box">
+      <div class="box-head"><span class="ico">&#9783;</span> My Files</div>
+      <div class="box-body">
+        <div id="myfiles-grid" class="files-grid"><div style="color:#555;text-align:center;padding:20px;width:100%">Loading...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIP INFO -->
+  <div id="sec-vip" class="section" style="display:none">
+    <div class="box">
+      <div class="box-head"><span class="ico" style="color:#f5a623">&#9733;</span> VIP Membership</div>
+      <div class="box-body">
+        <div style="color:#aaa;font-size:13px;line-height:2;padding:10px 0">
+          <div style="font-size:18px;font-weight:bold;color:#f5a623;margin-bottom:16px">Unlock Full Access with VIP</div>
+          <div>&#9654; <strong style="color:#eee">1 GB</strong> daily upload limit</div>
+          <div>&#9654; <strong style="color:#eee">Unlimited video playback</strong> - no 15-second preview cut</div>
+          <div>&#9654; <strong style="color:#eee">Priority processing</strong> for uploads</div>
+          <div>&#9654; <strong style="color:#eee">Exclusive VIP badge</strong> on your profile</div>
+          <div>&#9654; <strong style="color:#eee">Secure video links</strong> bound to your account IP</div>
+          <div style="margin-top:20px;color:#555;font-size:11px">To get VIP, contact site administration or owner. VIP is assigned manually by admins.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN PANEL -->
+  <div id="sec-admin" class="section" style="display:none">
+    <div class="box">
+      <div class="box-head"><span class="ico">&#9881;</span> Owner Panel <span style="font-size:10px;color:#888;font-weight:normal;margin-left:8px">Restricted Access</span></div>
+      <div class="box-body">
+        <div class="adm-tabs">
+          <div class="adm-tab active" onclick="admTab('stats')">Stats</div>
+          <div class="adm-tab" onclick="admTab('users')">Users</div>
+          <div class="adm-tab" onclick="admTab('files')">Files</div>
+          <div class="adm-tab" onclick="admTab('watchstats')">&#9654; Watch Stats</div>
+          <div class="adm-tab" onclick="admTab('config')">Config</div>
+        </div>
+
+        <div class="adm-section active" id="adm-stats">
+          <div class="stats-row" id="stats-cards"></div>
+          <button class="btn btn-gray btn-sm" onclick="loadStats()">&#8635; Refresh</button>
+        </div>
+
+        <div class="adm-section" id="adm-users">
+          <div style="margin-bottom:8px;display:flex;gap:8px;align-items:center">
+            <input type="text" id="user-search" placeholder="Search username..." style="background:#111;border:1px solid #333;color:#ddd;padding:5px 8px;font-size:12px;width:200px;border-radius:2px">
+            <button class="btn btn-gray btn-sm" onclick="loadUsers()">&#8635; Refresh</button>
+          </div>
+          <div style="overflow-x:auto"><table class="admin" id="users-table"><thead><tr><th>Username</th><th>Role</th><th>Uploads</th><th>Today</th><th>Status</th><th>Actions</th></tr></thead><tbody id="users-tbody"><tr><td colspan="6" style="text-align:center;color:#555">Loading...</td></tr></tbody></table></div>
+        </div>
+
+        <div class="adm-section" id="adm-files">
+          <div style="margin-bottom:8px;display:flex;gap:8px">
+            <button class="btn btn-gray btn-sm" onclick="loadAdminFiles()">&#8635; Refresh</button>
+          </div>
+          <div style="overflow-x:auto"><table class="admin" id="files-table"><thead><tr><th>Filename</th><th>Uploader</th><th>Size</th><th>Type</th><th>Views</th><th>Premium</th><th>Actions</th></tr></thead><tbody id="files-tbody"><tr><td colspan="7" style="text-align:center;color:#555">Loading...</td></tr></tbody></table></div>
+        </div>
+
+        <div class="adm-section" id="adm-watchstats">
+          <div style="margin-bottom:10px;display:flex;gap:8px;align-items:center">
+            <button class="btn btn-gray btn-sm" onclick="loadWatchStats()">&#8635; Refresh</button>
+            <span style="color:#666;font-size:11px">Real-time playback analytics per video. Shows which seconds users watched most.</span>
+          </div>
+          <div id="watchstats-all" style="color:#555;font-size:12px;text-align:center;padding:20px">Loading...</div>
+        </div>
+
+        <div class="adm-section" id="adm-config">
+          <div id="cfg-form">
+            <div class="toggle-row">
+              <div><label>Premium Mode</label><small>Limits video to 15s for non-VIP users</small></div>
+              <div class="toggle" id="toggle-premium" onclick="togglePremium()"></div>
+            </div>
+            <div class="toggle-row">
+              <div><label>Maintenance Mode</label><small>Only owner IP can access the site</small></div>
+              <div class="toggle" id="toggle-maint" onclick="toggleMaint()"></div>
+            </div>
+            <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+              <div>
+                <label style="color:#999;font-size:11px;display:block;margin-bottom:3px">Free Daily Limit (MB)</label>
+                <input type="number" id="cfg-free" value="30" style="background:#111;border:1px solid #333;color:#ddd;padding:5px 8px;font-size:12px;width:120px;border-radius:2px">
+              </div>
+              <div>
+                <label style="color:#999;font-size:11px;display:block;margin-bottom:3px">VIP Daily Limit (MB)</label>
+                <input type="number" id="cfg-vip" value="1024" style="background:#111;border:1px solid #333;color:#ddd;padding:5px 8px;font-size:12px;width:120px;border-radius:2px">
+              </div>
+            </div>
+            <div style="margin-top:10px">
+              <button class="btn btn-red" onclick="saveConfig()">Save Config</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH MODAL -->
+<div id="modal-wrap" onclick="closeModal(event)">
+  <div id="modal">
+    <span id="modal-close" onclick="closeModal()">&#10005;</span>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- FILE MODAL -->
+<div id="file-modal-wrap" onclick="closeFileModal(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9998;align-items:center;justify-content:center">
+  <div id="file-modal" style="background:#1e1e1e;border:1px solid #3a3a3a;border-radius:3px;width:750px;max-width:96vw;max-height:93vh;overflow-y:auto;position:relative">
+    <span onclick="closeFileModal()" style="position:absolute;top:8px;right:10px;color:#888;font-size:18px;cursor:pointer;z-index:10">&#10005;</span>
+    <div id="file-modal-body" style="padding:16px"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div id="footer">MetaUpload &copy; 2024 &mdash; Fast &amp; Secure File Hosting &mdash; <a href="#" onclick="showSection('vip');return false">Get VIP</a></div>
+
+<script>
+/* ─── STATE ─────────────────────────────────────────────────────────── */
+let currentUser = null;
+let currentSection = 'home';
+let cfgState = { premiumEnabled: false, maintenance: false };
+
+/* ─── INIT ──────────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', async () => {
+  await checkMe();
+  await loadConfig();
+  loadRecentFiles();
+  loadSidebarStats();
+});
+
+async function checkMe() {
+  try {
+    const r = await api('/api/me');
+    if (r.ok) {
+      currentUser = r;
+      showUserInfo(r);
+    }
+  } catch(e) {}
+}
+
+async function loadConfig() {
+  try {
+    const r = await api('/api/config');
+    cfgState = r;
+    const nb = document.getElementById('notice-maintenance');
+    const nb2 = document.getElementById('notice-premium');
+    if (r.maintenance) nb.classList.add('show');
+    if (r.premiumEnabled) nb2.classList.add('show');
+    updatePremiumToggles(false); // init both toggles
+  } catch(e) {}
+}
+
+function updatePremiumToggles(isVideo) {
+  const canUse = cfgState.premiumEnabled && isVideo;
+  [
+    { sw: 'prem-switch', knob: 'prem-switch-knob', lbl: 'prem-switch-label', txt: 'prem-switch-txt', hint: 'prem-toggle-hint', cb: 'mark-premium' },
+    { sw: 'prem-switch2', knob: 'prem-switch-knob2', lbl: 'prem-switch-label2', txt: 'prem-switch-txt2', hint: 'prem-toggle-hint2', cb: 'mark-premium2' }
+  ].forEach(ids => {
+    const sw = document.getElementById(ids.sw);
+    const knob = document.getElementById(ids.knob);
+    const lbl = document.getElementById(ids.lbl);
+    const txt = document.getElementById(ids.txt);
+    const hint = document.getElementById(ids.hint);
+    const cb = document.getElementById(ids.cb);
+    if (!sw) return;
+
+    if (!cfgState.premiumEnabled) {
+      lbl.style.cursor = 'not-allowed'; lbl.style.opacity = '0.35'; lbl.title = 'Premium mode must be enabled by admin';
+      hint.textContent = 'Enable premium mode in config to use this feature'; hint.style.color = '#444';
+      if (cb) { cb.disabled = true; cb.checked = false; }
+      sw.style.background = '#222'; sw.style.borderColor = '#444';
+      knob.style.left = '3px'; knob.style.background = '#555';
+      txt.textContent = 'Off'; txt.style.color = '#555';
+      lbl.onclick = null;
+    } else if (!isVideo) {
+      lbl.style.cursor = 'not-allowed'; lbl.style.opacity = '0.4'; lbl.title = 'Only available for video files';
+      hint.textContent = 'Select a video file to enable this option'; hint.style.color = '#555';
+      if (cb) { cb.disabled = true; cb.checked = false; }
+      sw.style.background = '#222'; sw.style.borderColor = '#444';
+      knob.style.left = '3px'; knob.style.background = '#555';
+      txt.textContent = 'Off'; txt.style.color = '#555';
+      lbl.onclick = null;
+    } else {
+      // Fully enabled
+      lbl.style.cursor = 'pointer'; lbl.style.opacity = '1'; lbl.title = 'Mark this video as premium (non-VIP users see 15s preview)';
+      hint.textContent = 'Non-VIP users will only see a 15-second preview'; hint.style.color = '#888';
+      if (cb) cb.disabled = false;
+      const isOn = cb && cb.checked;
+      applyPremSwitch(ids, isOn);
+      lbl.onclick = () => {
+        if (!cb) return;
+        cb.checked = !cb.checked;
+        applyPremSwitch(ids, cb.checked);
+      };
+    }
+  });
+}
+
+function applyPremSwitch(ids, isOn) {
+  const sw = document.getElementById(ids.sw);
+  const knob = document.getElementById(ids.knob);
+  const txt = document.getElementById(ids.txt);
+  if (!sw) return;
+  if (isOn) {
+    sw.style.background = '#7a5500'; sw.style.borderColor = '#c08a00';
+    knob.style.left = '23px'; knob.style.background = '#f5a623';
+    txt.textContent = 'On'; txt.style.color = '#f5a623';
+  } else {
+    sw.style.background = '#1a1a00'; sw.style.borderColor = '#5a3a00';
+    knob.style.left = '3px'; knob.style.background = '#c08a00';
+    txt.textContent = 'Off'; txt.style.color = '#888';
+  }
+}
+
+function showUserInfo(u) {
+  document.getElementById('guestinfo').style.display = 'none';
+  document.getElementById('userinfo').style.display = 'flex';
+  document.getElementById('ui-username').textContent = u.username;
+  const rb = document.getElementById('ui-rolebadge');
+  rb.textContent = u.role;
+  rb.className = 'role-badge role-' + u.role;
+  const q = document.getElementById('ui-quota');
+  q.textContent = u.remaining === -1 ? 'Unlimited' : 'Quota: ' + fmtBytes(u.remaining) + ' left';
+  document.getElementById('myfiles-link').style.display = 'flex';
+  if (['owner','mod'].includes(u.role)) document.getElementById('admin-link').style.display = 'flex';
+}
+
+/* ─── SECTIONS ──────────────────────────────────────────────────────── */
+function showSection(s) {
+  document.querySelectorAll('.section').forEach(el => el.style.display = 'none');
+  const el = document.getElementById('sec-' + s);
+  if (el) el.style.display = 'block';
+  currentSection = s;
+  if (s === 'myfiles' && currentUser) loadMyFiles();
+  if (s === 'admin' && currentUser && ['owner','mod'].includes(currentUser.role)) { loadStats(); loadAdminConfig(); }
+}
+
+/* ─── AUTH ──────────────────────────────────────────────────────────── */
+function openAuth(mode) {
+  const mb = document.getElementById('modal-body');
+  const isLogin = mode === 'login';
+  mb.innerHTML = `
+    <div style="padding:4px 0 12px;font-size:16px;font-weight:bold;color:#ddd">${isLogin ? 'Login' : 'Create Account'}</div>
+    <div class="form-row"><label>Username</label><input type="text" id="auth-user" placeholder="your_username" autocomplete="username"></div>
+    <div class="form-row"><label>Password</label><input type="password" id="auth-pw" placeholder="••••••" autocomplete="${isLogin ? 'current-password' : 'new-password'}"></div>
+    <div class="err-msg" id="auth-err"></div>
+    <div class="ok-msg" id="auth-ok"></div>
+    <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+      <button class="btn btn-red" onclick="submitAuth('${mode}')">${isLogin ? 'Login' : 'Register'}</button>
+      <span style="color:#666;font-size:11px">${isLogin ? 'No account? <a href="#" onclick="openAuth(\'register\')">Register</a>' : 'Have account? <a href="#" onclick="openAuth(\'login\')">Login</a>'}</span>
+    </div>`;
+  document.getElementById('modal-wrap').classList.add('show');
+  setTimeout(() => document.getElementById('auth-user').focus(), 100);
+  document.getElementById('auth-pw').addEventListener('keydown', e => { if (e.key === 'Enter') submitAuth(mode); });
+}
+
+async function submitAuth(mode) {
+  const u = document.getElementById('auth-user').value.trim();
+  const p = document.getElementById('auth-pw').value;
+  const err = document.getElementById('auth-err');
+  const ok = document.getElementById('auth-ok');
+  err.classList.remove('show'); ok.classList.remove('show');
+  if (!u || !p) { err.textContent = 'Fill all fields.'; err.classList.add('show'); return; }
+  const r = await api('/api/' + mode, { method: 'POST', body: { username: u, password: p } });
+  if (!r.ok) {
+    const msgs = { USER_EXISTS:'Username taken.',INVALID_CREDENTIALS:'Invalid username or password.',PASS_TOO_SHORT:'Password too short (min 6 chars).',INVALID_USERNAME:'Username: 3-20 chars, letters/numbers/underscore only.',ACCOUNT_BANNED:'This account has been banned.' };
+    err.textContent = msgs[r.error] || r.error;
+    err.classList.add('show');
+  } else {
+    if (mode === 'register') { ok.textContent = 'Account created! Logging in...'; ok.classList.add('show'); await submitAuth('login'); }
+    else { await checkMe(); closeModal(); toast('Welcome back, ' + u + '!', 'ok'); loadRecentFiles(); loadSidebarStats(); }
+  }
+}
+
+async function doLogout() {
+  await api('/api/logout', { method: 'POST' });
+  currentUser = null;
+  document.getElementById('userinfo').style.display = 'none';
+  document.getElementById('guestinfo').style.display = 'flex';
+  document.getElementById('myfiles-link').style.display = 'none';
+  document.getElementById('admin-link').style.display = 'none';
+  toast('Logged out.', 'ok');
+  showSection('home');
+}
+
+/* ─── UPLOAD ────────────────────────────────────────────────────────── */
+let pendingFile = null;
+
+function handleDrop(e) { e.preventDefault(); e.stopPropagation(); document.getElementById('upload-zone').classList.remove('drag'); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }
+function handleDrop2(e) { e.preventDefault(); e.stopPropagation(); document.getElementById('upload-zone2').classList.remove('drag'); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }
+
+function handleFile(file) {
+  if (!currentUser) { toast('Please login to upload files.', 'err'); openAuth('login'); return; }
+  if (!file) return;
+  const allowed = ['image/jpeg','image/png','image/gif','image/webp','video/mp4','video/webm','video/ogg','video/quicktime'];
+  if (!allowed.includes(file.type)) { toast('Invalid file type. Only images, GIFs and videos allowed.', 'err'); return; }
+
+  pendingFile = file;
+  const isVid = file.type.startsWith('video/');
+
+  // Show file info strip
+  ['', '2'].forEach(sfx => {
+    const info = document.getElementById('file-selected-info' + sfx);
+    const nameEl = document.getElementById('file-selected-name' + sfx);
+    const sizeEl = document.getElementById('file-selected-size' + sfx);
+    const btnWrap = document.getElementById('upload-btn-wrap' + sfx);
+    if (info) { info.style.display = 'flex'; if (nameEl) nameEl.textContent = file.name; if (sizeEl) sizeEl.textContent = fmtBytes(file.size); }
+    if (btnWrap) btnWrap.style.display = 'block';
+  });
+
+  // Update premium toggles based on file type
+  updatePremiumToggles(isVid);
+}
+
+function clearSelectedFile() {
+  pendingFile = null;
+  ['', '2'].forEach(sfx => {
+    const info = document.getElementById('file-selected-info' + sfx);
+    const btnWrap = document.getElementById('upload-btn-wrap' + sfx);
+    const fi = document.getElementById('file-input' + (sfx === '' ? '' : sfx));
+    if (info) info.style.display = 'none';
+    if (btnWrap) btnWrap.style.display = 'none';
+    if (fi) fi.value = '';
+  });
+  updatePremiumToggles(false);
+  // Reset premium checkboxes
+  const mp = document.getElementById('mark-premium'); if (mp) mp.checked = false;
+  const mp2 = document.getElementById('mark-premium2'); if (mp2) mp2.checked = false;
+  updatePremiumToggles(false);
+}
+
+function startUpload() {
+  if (!pendingFile) { toast('No file selected.', 'err'); return; }
+  doUpload(pendingFile);
+}
+
+function doUpload(file) {
+  const pw = document.getElementById('prog-wrap');
+  const pf = document.getElementById('prog-fill');
+  const pt2 = document.getElementById('prog-text');
+  const ur = document.getElementById('upload-result');
+  const rl2 = document.getElementById('result-link');
+  const pw2 = document.getElementById('prog-wrap2');
+  const pf2 = document.getElementById('prog-fill2');
+  const pt3 = document.getElementById('prog-text2');
+
+  // Hide upload buttons while uploading
+  ['', '2'].forEach(sfx => {
+    const bw = document.getElementById('upload-btn-wrap' + sfx);
+    if (bw) bw.style.display = 'none';
+  });
+
+  ur.style.display = 'none';
+  if (pw) pw.style.display = 'block';
+  if (pw2) pw2.style.display = 'block';
+
+  const fd = new FormData();
+  fd.append('file', file);
+  const mp = document.getElementById('mark-premium');
+  const mp2 = document.getElementById('mark-premium2');
+  const wantsPremium = (mp && mp.checked) || (mp2 && mp2.checked);
+  fd.append('markPremium', wantsPremium ? '1' : '0');
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', '/api/upload');
+  xhr.withCredentials = true;
+
+  xhr.upload.addEventListener('progress', e => {
+    if (e.lengthComputable) {
+      const pct = Math.round(e.loaded / e.total * 100);
+      if (pf) pf.style.width = pct + '%';
+      if (pf2) pf2.style.width = pct + '%';
+      const txt = `Uploading... ${pct}% (${fmtBytes(e.loaded)} / ${fmtBytes(e.total)})`;
+      if (pt2) pt2.textContent = txt;
+      if (pt3) pt3.textContent = txt;
+    }
+  });
+
+  xhr.addEventListener('load', () => {
+    if (pw) pw.style.display = 'none';
+    if (pw2) pw2.style.display = 'none';
+    try {
+      const r = JSON.parse(xhr.responseText);
+      if (r.ok) {
+        const link = location.origin + '/view/' + r.id;
+        rl2.querySelector('span').textContent = '';
+        rl2.innerHTML = `<span class="copied" id="link-copied">Copied!</span>${link}`;
+        rl2.onclick = () => copyLink(rl2, link);
+        ur.style.display = 'block';
+        document.getElementById('prem-warning').style.display = r.premium && cfgState.premiumEnabled ? 'block' : 'none';
+        toast('Upload complete!', 'ok');
+        // Full reset
+        pendingFile = null;
+        clearSelectedFile();
+        checkMe();
+        loadRecentFiles();
+        if (currentSection === 'myfiles') loadMyFiles();
+      } else {
+        const errs = { DAILY_LIMIT_EXCEEDED: 'Daily upload limit reached. Upgrade to VIP for more.', NO_FILE: 'No file selected.', INVALID_TYPE: 'File type not supported.' };
+        toast(errs[r.error] || 'Upload failed: ' + r.error, 'err');
+        // Re-show upload button on failure
+        ['', '2'].forEach(sfx => { const bw = document.getElementById('upload-btn-wrap' + sfx); if (bw && pendingFile) bw.style.display = 'block'; });
+      }
+    } catch(e) { toast('Upload failed.', 'err'); }
+  });
+  xhr.addEventListener('error', () => { if (pw) pw.style.display = 'none'; toast('Network error during upload.', 'err'); });
+  xhr.send(fd);
+}
+
+/* ─── FILES ─────────────────────────────────────────────────────────── */
+async function loadRecentFiles() {
+  const g = document.getElementById('recent-files');
+  if (!g) return;
+  if (!currentUser) { g.innerHTML = '<div style="color:#555;font-size:12px;text-align:center;padding:20px;width:100%">Login to see your files and community uploads.</div>'; return; }
+  try {
+    const r = await api('/api/myfiles');
+    if (r.ok) renderFilesGrid(r.files.slice(0,20), g, true);
+    else g.innerHTML = '<div style="color:#555;text-align:center;padding:20px;width:100%">No files yet.</div>';
+  } catch(e) { g.innerHTML = '<div style="color:#555;text-align:center;padding:20px;width:100%">Error loading files.</div>'; }
+}
+
+async function loadMyFiles() {
+  const g = document.getElementById('myfiles-grid');
+  if (!g) return;
+  g.innerHTML = '<div style="color:#555;text-align:center;padding:20px;width:100%">Loading...</div>';
+  try {
+    const r = await api('/api/myfiles');
+    if (r.ok && r.files.length > 0) renderFilesGrid(r.files, g, true);
+    else g.innerHTML = '<div style="color:#555;text-align:center;padding:20px;width:100%">No files uploaded yet. <a href="#" onclick="showSection(\'upload\');return false">Upload your first file</a></div>';
+  } catch(e) { g.innerHTML = '<div style="color:#555;text-align:center;padding:20px;width:100%">Error.</div>'; }
+}
+
+function renderFilesGrid(files, container, showDelete) {
+  if (!files.length) { container.innerHTML = '<div style="color:#555;text-align:center;padding:20px;width:100%">No files.</div>'; return; }
+  container.innerHTML = files.map(f => {
+    const isVid = f.mimetype && f.mimetype.startsWith('video/');
+    const thumbSrc = f.thumbReady !== false ? `/t/${f.id}` : null;
+    const gifSrc = f.gifReady ? `/g/${f.id}` : null;
+    const premBadge = (f.premium && cfgState.premiumEnabled) ? '<div class="file-prem">PREMIUM</div>' : '';
+    const playIco = isVid ? '<div class="play-ico">&#9654;</div>' : '';
+    const thumbHtml = thumbSrc
+      ? `<img src="${thumbSrc}" alt="" loading="lazy" ${gifSrc ? `onmouseenter="this.src='${gifSrc}'" onmouseleave="this.src='${thumbSrc}'"` : ''}>`
+      : `<div class="no-thumb">${isVid ? '&#127909;' : '&#128247;'}</div>`;
+    return `<div class="file-card" onclick="openFileModal('${f.id}')">
+      <div class="file-thumb">${thumbHtml}${playIco}${premBadge}</div>
+      <div class="file-info">
+        <div class="file-name" title="${esc(f.originalName)}">${esc(f.originalName)}</div>
+        <div class="file-meta"><span>${fmtBytes(f.size)}</span><span>${fmtDate(f.uploaded)}</span></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ─── FILE MODAL ────────────────────────────────────────────────────── */
+let currentVjsPlayer = null;
+let watchStatInterval = null;
+
+async function openFileModal(fid) {
+  const wrap = document.getElementById('file-modal-wrap');
+  const body = document.getElementById('file-modal-body');
+  wrap.style.display = 'flex';
+  body.innerHTML = '<div style="text-align:center;padding:30px;color:#555">Loading...</div>';
+
+  // Destroy previous player
+  if (currentVjsPlayer) { try { currentVjsPlayer.dispose(); } catch(e) {} currentVjsPlayer = null; }
+  if (watchStatInterval) { clearInterval(watchStatInterval); watchStatInterval = null; }
+
+  try {
+    const f = await api('/api/file/' + fid);
+    if (!f.ok) { body.innerHTML = '<div style="color:#f55;padding:20px">File not found.</div>'; return; }
+    const isVid = f.mimetype.startsWith('video/');
+    const isGif = f.mimetype === 'image/gif';
+    const isPrem = f.premium && cfgState.premiumEnabled;
+    const canFull = currentUser && ['owner','mod','vip'].includes(currentUser.role);
+    const link = location.origin + '/view/' + f.id;
+
+    let mediaHtml = '';
+    if (isVid) {
+      // Premium buton: dosya seçmeden, her video için göster (premium değilse "mark premium" teklif et, premiumsa "premium" badge)
+      const premBtnHtml = currentUser && ['owner','mod'].includes(currentUser.role)
+        ? (isPrem
+            ? `<button class="btn btn-gold btn-sm" onclick="toggleFilePremium('${f.id}', false)" style="margin-left:6px">&#9733; Remove Premium</button>`
+            : `<button class="btn btn-gold btn-sm" onclick="toggleFilePremium('${f.id}', true)" style="margin-left:6px">&#9733; Make Premium</button>`)
+        : (isPrem && !canFull
+            ? `<button class="btn btn-gold btn-sm" onclick="showSection('vip');closeFileModal()" style="margin-left:6px">&#9733; Get VIP to Watch Full</button>`
+            : '');
+
+      const overlay = (isPrem && !canFull)
+        ? `<div class="vip-overlay"><div class="vip-msg">&#9733; VIP Required for Full Video<small>Preview limited to 15 seconds</small></div><button class="btn btn-gold" onclick="showSection('vip');closeFileModal()">Get VIP Access</button></div>`
+        : '';
+
+      mediaHtml = `
+        <div class="video-wrap" style="position:relative">
+          <video id="vjs-player-${f.id}" class="video-js vjs-default-skin" controls preload="auto" playsinline style="width:100%;max-height:420px">
+          </video>
+          ${overlay}
+          <div class="vjs-heatmap-bar"><canvas id="heatmap-canvas-${f.id}" height="4"></canvas></div>
+        </div>
+        ${isPrem ? `<div style="margin-top:6px;color:#f5a623;font-size:11px">&#9733; Premium Video ${premBtnHtml}</div>` : `<div style="margin-top:4px;font-size:11px;color:#555">${premBtnHtml}</div>`}`;
+    } else {
+      mediaHtml = `<div style="text-align:center;background:#111;border-radius:2px;overflow:hidden"><img src="/f/${f.id}" alt="${esc(f.originalName)}" style="max-width:100%;max-height:420px;display:block;margin:0 auto"></div>`;
+    }
+
+    body.innerHTML = `
+      <div style="font-size:14px;font-weight:bold;color:#ddd;margin-bottom:10px;padding-right:24px">${esc(f.originalName)}</div>
+      ${mediaHtml}
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;font-size:11px;color:#666">
+        <span>&#128203; ${fmtBytes(f.size)}</span>
+        <span>&#128065; ${f.views} views</span>
+        <span>&#128197; ${fmtDate(f.uploaded)}</span>
+        <span>&#128100; ${esc(f.uploader)}</span>
+        ${isPrem ? '<span class="prem-lock">PREMIUM</span>' : ''}
+      </div>
+      <div class="link-box" onclick="copyLink(this,'${link}')" style="margin-top:10px;position:relative">
+        <span class="copied" id="fm-copied">Copied!</span>${link}
+      </div>
+      <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-red btn-sm" onclick="copyLink(document.querySelector('#fm-copied').parentElement,'${link}')">&#128203; Copy Link</button>
+        ${currentUser && (f.uploader === currentUser.username || ['owner','mod'].includes(currentUser.role)) ? `<button class="btn btn-gray btn-sm" onclick="deleteFile('${f.id}')">&#128465; Delete</button>` : ''}
+      </div>`;
+
+    // Init Video.js after DOM update
+    if (isVid) {
+      await initVideoPlayer(f, isPrem, canFull);
+    }
+  } catch(e) { body.innerHTML = '<div style="color:#f55;padding:20px">Error loading file.</div>'; }
+}
+
+async function initVideoPlayer(f, isPrem, canFull) {
+  // ── 1. Token al ───────────────────────────────────────────────────────────
+  let currentToken = null;
+  let isPreview    = false;
+  try {
+    const tr = await api('/api/video-token/' + f.id, { method: 'POST' });
+    if (tr.ok && tr.token) { currentToken = tr.token; isPreview = !!tr.isPreview; }
+  } catch(e) {}
+
+  if (!currentToken) {
+    const wrap = document.getElementById('vjs-player-' + f.id)?.parentElement;
+    if (wrap) wrap.innerHTML = '<div style="color:#f55;padding:20px;text-align:center">Oturum hatası. Sayfayı yenileyin.</div>';
+    return;
+  }
+
+  // ── 2. HLS playlist URL'i — Token burada gömülü, gerçek dosya yolu görünmez ─
+  const hlsUrl = `/hls/${encodeURIComponent(currentToken)}/playlist.m3u8`;
+
+  const videoEl = document.getElementById('vjs-player-' + f.id);
+  if (!videoEl) return;
+
+  // ── 3. HLS.js ile oynat (native HLS destekleniyorsa direkt) ───────────────
+  if (Hls.isSupported()) {
+    const hls = new Hls({
+      maxBufferLength: isPreview ? 16 : 60,          // Preview'da fazla buffer etme
+      maxMaxBufferLength: isPreview ? 16 : 120,
+      enableWorker: true,
+      lowLatencyMode: false,
+      // Segment'leri sıralı yükle, parallel indirme denemesin
+      maxFragLookUpTolerance: 0.1,
+    });
+
+    hls.loadSource(hlsUrl);
+    hls.attachMedia(videoEl);
+
+    hls.on(Hls.Events.ERROR, (event, data) => {
+      if (data.fatal) {
+        if (data.type === Hls.ErrorTypes.NETWORK_ERROR) hls.startLoad();
+        else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
+      }
+    });
+
+    // Video.js wrapper (kontroller için)
+    currentVjsPlayer = videojs(videoEl, {
+      fluid: false, responsive: false, controls: true,
+      autoplay: false, muted: false, preload: 'none',
+      techOrder: ['html5'],
+      controlBar: { volumePanel: { inline: true }, pictureInPictureToggle: false }
+    });
+
+    // ── 4. Preview: isPreview=true ise server zaten sadece 15sn gönderdi ─────
+    // HLS playlist'te sadece 15sn'lik segment var. Video bitince overlay göster.
+    if (isPreview) {
+      currentVjsPlayer.on('ended', function() {
+        this.controls(false);
+        const wrap = videoEl.closest('[style*="position"]') || videoEl.parentElement;
+        if (wrap && !wrap.querySelector('.preview-gate-overlay')) {
+          wrap.style.position = 'relative';
+          wrap.insertAdjacentHTML('beforeend', `
+            <div class="preview-gate-overlay" style="position:absolute;inset:0;background:rgba(0,0,0,0.93);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99;border-radius:3px">
+              <div style="color:#f5a623;font-size:24px;margin-bottom:10px">&#9733; VIP Gerekli</div>
+              <div style="color:#ccc;font-size:13px;margin-bottom:20px;text-align:center">
+                Ücretsiz önizleme sona erdi (15 saniye).<br>
+                Sınırsız izleme için VIP üyelik alın.
+              </div>
+              <button class="btn btn-gold" onclick="showSection('vip');closeFileModal()">VIP Üyelik Al</button>
+            </div>
+          `);
+        }
+      });
+
+      // Seek engeli — preview'da kullanıcı 15sn'den ileri gidemez
+      // (Zaten server sadece 15sn'lik segment üretmiş, playlist'te fazlası yok)
+      currentVjsPlayer.on('seeking', function() {
+        const dur = this.duration();
+        if (!isNaN(dur) && this.currentTime() >= dur - 0.5) {
+          this.currentTime(0);
+        }
+      });
+    }
+
+    // ── 5. Cleanup: modal kapanınca hls instance'ı da yok et ─────────────────
+    const origDispose = currentVjsPlayer.dispose.bind(currentVjsPlayer);
+    currentVjsPlayer.dispose = function() {
+      try { hls.destroy(); } catch(e) {}
+      origDispose();
+    };
+
+  } else if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
+    // Safari native HLS
+    videoEl.src = hlsUrl;
+    currentVjsPlayer = videojs(videoEl, {
+      fluid: false, responsive: false, controls: true, autoplay: false, muted: false, preload: 'none',
+      controlBar: { volumePanel: { inline: true }, pictureInPictureToggle: false }
+    });
+  } else {
+    const wrap = videoEl.parentElement;
+    if (wrap) wrap.innerHTML = '<div style="color:#f55;padding:20px;text-align:center">Tarayıcınız HLS video oynatmayı desteklemiyor.</div>';
+    return;
+  }
+
+  // ── 6. Watch stat ─────────────────────────────────────────────────────────
+  watchStatInterval = setInterval(() => {
+    if (!currentVjsPlayer || currentVjsPlayer.paused()) return;
+    const sec = Math.floor(currentVjsPlayer.currentTime());
+    api('/api/watch-stat', { method: 'POST', body: { fid: f.id, second: sec, vt: currentToken } }).catch(() => {});
+  }, 2000);
+
+  if (currentUser && ['owner','mod'].includes(currentUser.role)) {
+    loadVideoHeatmap(f.id);
+  }
+}
+
+async function loadVideoHeatmap(fid) {
+  try {
+    const r = await api('/api/admin/watch-stats/' + fid);
+    if (!r.ok) return;
+    const canvas = document.getElementById('heatmap-canvas-' + fid);
+    if (!canvas) return;
+    const hm = r.heatmap;
+    const keys = Object.keys(hm).map(Number);
+    if (!keys.length) return;
+    const maxSec = Math.max(...keys);
+    const maxCount = Math.max(...Object.values(hm));
+    if (!maxSec || !maxCount) return;
+
+    canvas.width = canvas.parentElement.offsetWidth || 600;
+    canvas.height = 4;
+    const ctx = canvas.getContext('2d');
+    for (let s = 0; s <= maxSec; s++) {
+      const cnt = hm[s] || 0;
+      const ratio = cnt / maxCount;
+      const x = Math.floor((s / maxSec) * canvas.width);
+      const w = Math.max(1, Math.floor(canvas.width / maxSec));
+      ctx.fillStyle = `rgba(245, 166, 35, ${0.15 + ratio * 0.85})`;
+      ctx.fillRect(x, 0, w, 4);
+    }
+  } catch(e) {}
+}
+
+async function toggleFilePremium(fid, makePremium) {
+  if (!currentUser || !['owner','mod'].includes(currentUser.role)) return;
+  const r = await api('/api/admin/setpremium', { method: 'POST', body: { fid, premium: makePremium } });
+  if (r.ok) { toast(makePremium ? '⭐ Video marked as Premium.' : 'Premium removed.', 'ok'); openFileModal(fid); }
+  else toast('Failed to update premium status.', 'err');
+}
+
+function closeFileModal(e) {
+  if (e && e.target !== document.getElementById('file-modal-wrap')) return;
+  document.getElementById('file-modal-wrap').style.display = 'none';
+  if (currentVjsPlayer) {
+    try { currentVjsPlayer.dispose(); } catch(err) {}
+    currentVjsPlayer = null;
+  }
+  if (watchStatInterval) { clearInterval(watchStatInterval); watchStatInterval = null; }
+  document.getElementById('file-modal-body').innerHTML = '';
+}
+
+async function deleteFile(fid) {
+  if (!confirm('Delete this file?')) return;
+  const r = await api('/api/file/' + fid, { method: 'DELETE' });
+  if (r.ok) { toast('File deleted.', 'ok'); closeFileModal(); loadRecentFiles(); if (currentSection === 'myfiles') loadMyFiles(); }
+  else toast('Delete failed.', 'err');
+}
+
+/* ─── ADMIN ─────────────────────────────────────────────────────────── */
+function admTab(t) {
+  document.querySelectorAll('.adm-tab').forEach((el,i) => {
+    const tabs = ['stats','users','files','watchstats','config'];
+    el.classList.toggle('active', tabs[i] === t);
+  });
+  document.querySelectorAll('.adm-section').forEach(el => el.classList.remove('active'));
+  document.getElementById('adm-' + t).classList.add('active');
+  if (t === 'users') loadUsers();
+  if (t === 'files') loadAdminFiles();
+  if (t === 'config') loadAdminConfig();
+  if (t === 'watchstats') loadWatchStats();
+}
+
+async function loadStats() {
+  try {
+    const r = await api('/api/admin/stats');
+    if (!r.ok) return;
+    document.getElementById('stats-cards').innerHTML = `
+      <div class="stat-card"><div class="num">${r.totalUsers}</div><div class="lbl">Total Users</div></div>
+      <div class="stat-card"><div class="num">${r.totalFiles}</div><div class="lbl">Total Files</div></div>
+      <div class="stat-card"><div class="num">${fmtBytes(r.totalSize)}</div><div class="lbl">Storage Used</div></div>
+      <div class="stat-card"><div class="num">${r.vipUsers}</div><div class="lbl">VIP Users</div></div>
+      <div class="stat-card"><div class="num">${r.modUsers}</div><div class="lbl">Moderators</div></div>
+      <div class="stat-card"><div class="num">${r.bannedUsers}</div><div class="lbl">Banned</div></div>`;
+  } catch(e) {}
+}
+
+async function loadUsers() {
+  const tb = document.getElementById('users-tbody');
+  tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#555">Loading...</td></tr>';
+  try {
+    const r = await api('/api/admin/users');
+    if (!r.ok) return;
+    const search = document.getElementById('user-search').value.toLowerCase();
+    const users = r.users.filter(u => !search || u.username.toLowerCase().includes(search));
+    if (!users.length) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#555">No users.</td></tr>'; return; }
+    tb.innerHTML = users.map(u => `<tr>
+      <td style="color:#eee">${esc(u.username)}</td>
+      <td><span class="role-badge role-${u.role}">${u.role}</span></td>
+      <td>${u.totalUploads}</td>
+      <td>${fmtBytes(u.uploadedToday)}</td>
+      <td style="color:${u.banned ? '#f55' : '#4c4'}">${u.banned ? 'Banned' : 'Active'}</td>
+      <td style="display:flex;gap:4px;flex-wrap:wrap">
+        <select onchange="setRole('${esc(u.username)}',this.value)" style="background:#111;border:1px solid #333;color:#ddd;padding:2px 4px;font-size:10px;border-radius:2px">
+          ${['free','vip','mod','owner'].map(r2 => `<option value="${r2}" ${u.role === r2 ? 'selected' : ''}>${r2}</option>`).join('')}
+        </select>
+        <button class="btn btn-sm" style="${u.banned ? 'background:linear-gradient(180deg,#4caf50,#2e7d32);border-color:#2e7d32' : 'background:linear-gradient(180deg,#c0271f,#7a1010);border-color:#6a0000'};color:#fff" onclick="banUser('${esc(u.username)}',${!u.banned})">${u.banned ? 'Unban' : 'Ban'}</button>
+      </td>
+    </tr>`).join('');
+  } catch(e) { tb.innerHTML = '<tr><td colspan="6" style="color:#f55">Error</td></tr>'; }
+}
+
+async function setRole(username, role) {
+  const r = await api('/api/admin/setrole', { method: 'POST', body: { username, role } });
+  if (r.ok) toast('Role updated.', 'ok'); else toast('Failed.', 'err');
+}
+
+async function banUser(username, banned) {
+  const r = await api('/api/admin/ban', { method: 'POST', body: { username, banned } });
+  if (r.ok) { toast(banned ? 'User banned.' : 'User unbanned.', 'ok'); loadUsers(); } else toast('Failed.', 'err');
+}
+
+async function loadAdminFiles() {
+  const tb = document.getElementById('files-tbody');
+  tb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#555">Loading...</td></tr>';
+  try {
+    const r = await api('/api/admin/files');
+    if (!r.ok) return;
+    if (!r.files.length) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#555">No files.</td></tr>'; return; }
+    tb.innerHTML = r.files.slice(0,100).map(f => `<tr>
+      <td><a href="#" onclick="openFileModal('${f.id}');return false" style="color:#4a90d9">${esc(f.originalName.length > 30 ? f.originalName.slice(0,30) + '...' : f.originalName)}</a></td>
+      <td>${esc(f.uploader)}</td>
+      <td>${fmtBytes(f.size)}</td>
+      <td style="color:#888">${f.mimetype.split('/')[0]}</td>
+      <td>${f.views}</td>
+      <td style="color:${f.premium ? '#f5a623' : '#555'}">${f.premium ? '★' : '-'}</td>
+      <td><button class="btn btn-sm" style="background:linear-gradient(180deg,#c0271f,#7a1010);border-color:#6a0000;color:#fff" onclick="adminDeleteFile('${f.id}')">Del</button></td>
+    </tr>`).join('');
+  } catch(e) {}
+}
+
+async function adminDeleteFile(fid) {
+  if (!confirm('Delete this file?')) return;
+  const r = await api('/api/admin/file/' + fid, { method: 'DELETE' });
+  if (r.ok) { toast('Deleted.', 'ok'); loadAdminFiles(); } else toast('Failed.', 'err');
+}
+
+async function loadWatchStats() {
+  const container = document.getElementById('watchstats-all');
+  if (!container) return;
+  container.innerHTML = '<div style="text-align:center;padding:20px;color:#555">Loading...</div>';
+  try {
+    const r = await api('/api/admin/watch-stats-all');
+    if (!r.ok || !r.stats.length) {
+      container.innerHTML = '<div style="text-align:center;padding:20px;color:#555">No watch data yet. Data is collected as users watch videos.</div>';
+      return;
+    }
+    container.innerHTML = r.stats.map(s => {
+      const topSecondsHtml = s.topSeconds.length
+        ? s.topSeconds.map(ts => `<span style="background:#2a1a00;border:1px solid #5a3a00;color:#f5a623;padding:1px 6px;border-radius:2px;font-size:10px;margin-right:4px">:${ts.second}s <span style="color:#888">(${ts.count}x)</span></span>`).join('')
+        : '<span style="color:#444">No data</span>';
+
+      // Per-user breakdown
+      const userEntries = Object.entries(s.byUser || {});
+      const userHtml = userEntries.length ? userEntries.sort((a,b) => {
+        const aTotal = Object.values(a[1]).reduce((x,y)=>x+y,0);
+        const bTotal = Object.values(b[1]).reduce((x,y)=>x+y,0);
+        return bTotal - aTotal;
+      }).slice(0,8).map(([uname, secs]) => {
+        const total = Object.values(secs).reduce((a,b)=>a+b,0);
+        const topSec = Object.entries(secs).sort((a,b)=>b[1]-a[1])[0];
+        const maxT = Math.max(...userEntries.map(([,u2])=>Object.values(u2).reduce((a,b)=>a+b,0)));
+        const pct = maxT ? Math.round(total/maxT*100) : 0;
+        return `<div class="user-watch-row">
+          <span class="user-watch-name">&#128100; ${esc(uname)}</span>
+          <div class="user-watch-bar"><div class="user-watch-fill" style="width:${pct}%"></div></div>
+          <span style="color:#666;font-size:10px;flex-shrink:0">${total} plays${topSec ? ` · most: :${topSec[0]}s` : ''}</span>
+        </div>`;
+      }).join('') : '<div style="color:#444;font-size:11px">No user data</div>';
+
+      return `<div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:3px;padding:10px;margin-bottom:10px">
+        <div style="font-size:12px;font-weight:bold;color:#ccc;margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.filename)}</div>
+        <div style="margin-bottom:6px;font-size:11px;color:#888">Total play events: <strong style="color:#e8322a">${s.totalPlays}</strong></div>
+        <div style="margin-bottom:8px"><span style="font-size:10px;color:#666;margin-right:6px">TOP SECONDS:</span>${topSecondsHtml}</div>
+        <div style="border-top:1px solid #222;padding-top:8px">
+          <div style="font-size:10px;color:#666;margin-bottom:6px">BY USER:</div>
+          ${userHtml}
+        </div>
+        <div style="margin-top:8px">
+          <canvas id="global-hm-${s.fid}" height="20" style="width:100%;display:block;border-radius:2px;background:#111"></canvas>
+        </div>
+      </div>`;
+    }).join('');
+
+    // Draw global heatmaps per file
+    for (const s of r.stats) {
+      const canvas = document.getElementById('global-hm-' + s.fid);
+      if (!canvas || !s.heatmap) continue;
+      const hm = s.heatmap;
+      const keys = Object.keys(hm).map(Number);
+      if (!keys.length) continue;
+      const maxSec = Math.max(...keys);
+      const maxCount = Math.max(...Object.values(hm));
+      canvas.width = canvas.parentElement.offsetWidth || 500;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#111';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      for (let sec = 0; sec <= maxSec; sec++) {
+        const cnt = hm[sec] || 0;
+        const ratio = cnt / maxCount;
+        const x = Math.floor((sec / maxSec) * canvas.width);
+        const w = Math.max(1, Math.ceil(canvas.width / (maxSec + 1)));
+        const intensity = 0.1 + ratio * 0.9;
+        ctx.fillStyle = `rgba(232, 50, 42, ${intensity})`;
+        ctx.fillRect(x, 0, w, canvas.height);
+      }
+      // Axis label
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.font = '9px monospace';
+      ctx.fillText('0s', 2, canvas.height - 3);
+      ctx.fillText(maxSec + 's', canvas.width - 24, canvas.height - 3);
+    }
+  } catch(e) { container.innerHTML = '<div style="color:#f55;padding:20px">Error loading stats.</div>'; }
+}
+
+async function loadAdminConfig() {
+  try {
+    const r = await api('/api/admin/config');
+    if (!r.ok) return;
+    const c = r.cfg;
+    const tp = document.getElementById('toggle-premium');
+    const tm = document.getElementById('toggle-maint');
+    if (tp) tp.classList.toggle('on', !!c.premiumEnabled);
+    if (tm) tm.classList.toggle('on', !!c.maintenance);
+    const fi = document.getElementById('cfg-free');
+    const vi = document.getElementById('cfg-vip');
+    if (fi) fi.value = Math.round((c.maxFreeDaily || 30*1024*1024) / (1024*1024));
+    if (vi) vi.value = Math.round((c.maxVipDaily || 1024*1024*1024) / (1024*1024));
+    cfgState = { premiumEnabled: !!c.premiumEnabled, maintenance: !!c.maintenance };
+  } catch(e) {}
+}
+
+async function togglePremium() {
+  const tp = document.getElementById('toggle-premium');
+  const newVal = !tp.classList.contains('on');
+  const r = await api('/api/admin/config', { method: 'POST', body: { premiumEnabled: newVal } });
+  if (r.ok) { tp.classList.toggle('on', newVal); cfgState.premiumEnabled = newVal; toast('Premium mode ' + (newVal ? 'enabled' : 'disabled') + '.', 'ok'); }
+}
+
+async function toggleMaint() {
+  const tm = document.getElementById('toggle-maint');
+  const newVal = !tm.classList.contains('on');
+  const r = await api('/api/admin/config', { method: 'POST', body: { maintenance: newVal } });
+  if (r.ok) { tm.classList.toggle('on', newVal); toast('Maintenance mode ' + (newVal ? 'enabled' : 'disabled') + '.', 'ok'); }
+}
+
+async function saveConfig() {
+  const fv = parseInt(document.getElementById('cfg-free').value) * 1024 * 1024;
+  const vv = parseInt(document.getElementById('cfg-vip').value) * 1024 * 1024;
+  const r = await api('/api/admin/config', { method: 'POST', body: { maxFreeDaily: fv, maxVipDaily: vv } });
+  if (r.ok) toast('Config saved.', 'ok'); else toast('Failed.', 'err');
+}
+
+async function loadSidebarStats() {
+  const el = document.getElementById('sidebar-stats');
+  if (!el) return;
+  try {
+    if (currentUser && ['owner','mod'].includes(currentUser.role)) {
+      const r = await api('/api/admin/stats');
+      if (r.ok) el.innerHTML = `<div>Users: <strong style="color:#ccc">${r.totalUsers}</strong></div><div>Files: <strong style="color:#ccc">${r.totalFiles}</strong></div><div>Storage: <strong style="color:#ccc">${fmtBytes(r.totalSize)}</strong></div>`;
+    } else {
+      el.innerHTML = `<div>Fast &amp; reliable hosting</div><div>Since 2024</div>`;
+    }
+  } catch(e) {}
+}
+
+/* ─── UTILS ─────────────────────────────────────────────────────────── */
+function copyLink(el, link) {
+  const txt = link || el.textContent.trim();
+  navigator.clipboard.writeText(txt).then(() => {
+    const c = el.querySelector('.copied') || document.getElementById('link-copied');
+    if (c) { c.classList.add('show'); setTimeout(() => c.classList.remove('show'), 1500); }
+  });
+}
+
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('modal-wrap')) return;
+  document.getElementById('modal-wrap').classList.remove('show');
+}
+
+function toast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show ' + (type || '');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function fmtBytes(b) {
+  if (!b) return '0 B';
+  if (b < 1024) return b + ' B';
+  if (b < 1024*1024) return (b/1024).toFixed(1) + ' KB';
+  if (b < 1024*1024*1024) return (b/(1024*1024)).toFixed(1) + ' MB';
+  return (b/(1024*1024*1024)).toFixed(2) + ' GB';
+}
+
+function fmtDate(ts) {
+  const d = new Date(ts);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function api(url, opts = {}) {
+  const options = {
+    method: opts.method || 'GET',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' }
+  };
+  if (opts.body) options.body = JSON.stringify(opts.body);
+  const r = await fetch(url, options);
+  return r.json();
+}
+
+// Handle /view/:id routes
+if (location.pathname.startsWith('/view/')) {
+  const fid = location.pathname.split('/').pop();
+  window.addEventListener('DOMContentLoaded', () => { setTimeout(() => openFileModal(fid), 300); });
+}
+
+document.getElementById('user-search') && document.getElementById('user-search').addEventListener('input', loadUsers);
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/video.js/8.6.1/video.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+node_modules/
+mu_files/
+mu_thumbs/
+mu_data/
+.env
+*.log

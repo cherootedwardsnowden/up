@@ -1,0 +1,29 @@
+{
+  "name": "metaupload",
+  "version": "1.0.0",
+  "description": "MetaUpload - File Hosting Platform",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "cookie-parser": "^1.4.6",
+    "uuid": "^9.0.0",
+    "sharp": "^0.33.2",
+    "fluent-ffmpeg": "^2.1.2",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.1.5",
+    "crypto-js": "^4.2.0",
+    "cors": "^2.8.5",
+    "ffmpeg-static": "^5.2.0",
+    "@ffprobe-installer/ffprobe": "^1.4.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
