@@ -894,12 +894,18 @@ async function initVideoPlayer(f, isPrem, canFull) {
   // ── 3. HLS.js ile oynat (native HLS destekleniyorsa direkt) ───────────────
   if (Hls.isSupported()) {
     const hls = new Hls({
-      maxBufferLength: isPreview ? 16 : 60,          // Preview'da fazla buffer etme
+      maxBufferLength: isPreview ? 16 : 60,
       maxMaxBufferLength: isPreview ? 16 : 120,
+      maxBufferSize: 60 * 1000 * 1000,        // 60MB buffer
       enableWorker: true,
       lowLatencyMode: false,
-      // Segment'leri sıralı yükle, parallel indirme denemesin
-      maxFragLookUpTolerance: 0.1,
+      fragLoadingTimeOut: 20000,               // 20sn timeout
+      manifestLoadingTimeOut: 15000,
+      levelLoadingTimeOut: 15000,
+      fragLoadingMaxRetry: 4,
+      manifestLoadingMaxRetry: 3,
+      startFragPrefetch: true,                 // İlk segment önceden yükle
+      testBandwidth: false,
     });
 
     hls.loadSource(hlsUrl);
