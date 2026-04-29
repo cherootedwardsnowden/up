@@ -56,6 +56,7 @@ setInterval(() => {
     if (v.expires < now) {
       v.segPaths.forEach(sp => { try { fs.unlinkSync(sp); } catch(e) {} });
       hlsCache.delete(k);
+      console.log("[HLS cache] Expired entry removed:", k);
     }
   }
 }, 5 * 60 * 1000);
@@ -124,72 +125,136 @@ function getVideoDuration(filePath) {
 }
 
 // ─── HLS SESSION ÜRETME ───────────────────────────────────────────────────────
-// isPreview=true → ffmpeg sadece PREVIEW_SECONDS saniye encode eder
-// Playlist'teki segment URL'leri token ile korunur, gerçek dosya yolu asla gönderilmez
-async function generateHlsSession(fid, filePath, isPreview, token) {
-  const cacheKey = fid + ":" + (isPreview ? "p" : "f") + ":" + token;
+// HIZLI YOL: stream copy kullan (re-encode yok), fid bazlı cache (token değil)
+// Aynı video için sadece bir kez ffmpeg çalışır, sonraki istekler cache'den gelir.
+// isPreview=true → sadece ilk PREVIEW_SECONDS saniyelik segmentler playlist'e eklenir.
 
-  if (hlsCache.has(cacheKey)) {
-    const cached = hlsCache.get(cacheKey);
-    if (cached.expires > Date.now()) return cached;
+// Aktif encode işlerini takip et (aynı fid için paralel encode engelle)
+const encodeInProgress = new Map();
+
+async function generateHlsSession(fid, filePath, isPreview, token) {
+  // Cache key: fid + preview flag (token DEĞİL — aynı video herkes için bir kez encode)
+  const fidCacheKey = fid + ":" + (isPreview ? "p" : "f");
+
+  // Cache'de varsa playlist'teki segment URL'lerini bu token ile yeniden yaz ve dön
+  if (hlsCache.has(fidCacheKey)) {
+    const cached = hlsCache.get(fidCacheKey);
+    if (cached.expires > Date.now()) {
+      return rewritePlaylistForToken(cached, token);
+    }
     cached.segPaths.forEach(sp => { try { fs.unlinkSync(sp); } catch(e) {} });
-    hlsCache.delete(cacheKey);
+    hlsCache.delete(fidCacheKey);
   }
 
-  const uid = _0x(cacheKey).slice(0, 20);
-  const segPrefix = pt.join(DIRS.hls, uid + "_s");
-  const m3u8Path  = pt.join(DIRS.hls, uid + ".m3u8");
+  // Aynı fid için encode devam ediyorsa bekle
+  if (encodeInProgress.has(fidCacheKey)) {
+    await encodeInProgress.get(fidCacheKey);
+    if (hlsCache.has(fidCacheKey)) {
+      return rewritePlaylistForToken(hlsCache.get(fidCacheKey), token);
+    }
+  }
 
-  return new Promise((resolve, reject) => {
+  const uid        = _0x(fidCacheKey).slice(0, 20);
+  const segPrefix  = pt.join(DIRS.hls, uid + "_s");
+  const m3u8Path   = pt.join(DIRS.hls, uid + ".m3u8");
+
+  const encodePromise = new Promise((resolve, reject) => {
     const cmd = ffmpeg(filePath);
 
-    if (isPreview) {
-      // Sadece ilk PREVIEW_SECONDS saniyeyi encode et — bunun ötesine geçmek MÜMKÜN DEĞİL
-      cmd.inputOptions(["-t " + PREVIEW_SECONDS]);
-    }
+    // Stream copy: orijinal codec'i koru, re-encode yok → anında başlar
+    // isPreview: sadece ilk N saniyeyi kes
+    const inputOpts = [];
+    if (isPreview) inputOpts.push("-t " + PREVIEW_SECONDS);
+    if (inputOpts.length) cmd.inputOptions(inputOpts);
 
     cmd
       .outputOptions([
-        "-c:v libx264",
-        "-c:a aac",
-        "-preset ultrafast",
-        "-crf 28",
-        "-vf scale=1280:-2",
+        "-c:v copy",          // Video re-encode YOK → çok hızlı
+        "-c:a copy",          // Ses re-encode YOK
         "-hls_time 4",
         "-hls_list_size 0",
         "-hls_segment_type mpegts",
         "-hls_segment_filename " + segPrefix + "%03d.ts",
-        "-hls_flags independent_segments+discont_start",
+        "-hls_flags independent_segments",
         "-f hls"
       ])
       .output(m3u8Path)
       .on("end", () => {
         try {
-          let playlist = fs.readFileSync(m3u8Path, "utf8");
+          const rawPlaylist = fs.readFileSync(m3u8Path, "utf8");
           try { fs.unlinkSync(m3u8Path); } catch(e) {}
 
+          // Segment yollarını topla (token'sız — raw paths)
           const segPaths = [];
-          // Segment dosya adlarını token'lı URL ile değiştir
-          playlist = playlist.replace(/^([^\s#][^\n]*\.ts)$/gm, (match, segRelFile) => {
-            const segBase = pt.basename(segRelFile);
-            const segAbs  = pt.join(DIRS.hls, segBase);
+          rawPlaylist.replace(/^([^\s#][^\n]*\.ts)$/gm, (_, segRelFile) => {
+            const segAbs = pt.join(DIRS.hls, pt.basename(segRelFile));
             if (fs.existsSync(segAbs)) segPaths.push(segAbs);
-            return "/hls/" + encodeURIComponent(token) + "/" + encodeURIComponent(segBase);
           });
 
           const entry = {
-            playlist,
+            rawPlaylist,  // Token içermeyen ham playlist
             segPaths,
-            expires: Date.now() + 4 * 60 * 60 * 1000,
+            expires: Date.now() + 8 * 60 * 60 * 1000, // 8 saat cache
             isPreview
           };
-          hlsCache.set(cacheKey, entry);
+          hlsCache.set(fidCacheKey, entry);
           resolve(entry);
         } catch(e) { reject(e); }
       })
-      .on("error", (e) => { console.error("[HLS gen]", e.message); reject(e); })
+      .on("error", (err) => {
+        // Stream copy başarısız olduysa (codec uyumsuzluğu) re-encode ile dene
+        console.warn("[HLS copy failed, retrying with encode]", err.message);
+        const cmd2 = ffmpeg(filePath);
+        if (isPreview) cmd2.inputOptions(["-t " + PREVIEW_SECONDS]);
+        cmd2
+          .outputOptions([
+            "-c:v libx264", "-c:a aac",
+            "-preset ultrafast", "-crf 23",
+            "-hls_time 4", "-hls_list_size 0",
+            "-hls_segment_type mpegts",
+            "-hls_segment_filename " + segPrefix + "%03d.ts",
+            "-hls_flags independent_segments",
+            "-f hls"
+          ])
+          .output(m3u8Path)
+          .on("end", () => {
+            try {
+              const rawPlaylist = fs.readFileSync(m3u8Path, "utf8");
+              try { fs.unlinkSync(m3u8Path); } catch(e2) {}
+              const segPaths = [];
+              rawPlaylist.replace(/^([^\s#][^\n]*\.ts)$/gm, (_, sf) => {
+                const sa = pt.join(DIRS.hls, pt.basename(sf));
+                if (fs.existsSync(sa)) segPaths.push(sa);
+              });
+              const entry = { rawPlaylist, segPaths, expires: Date.now() + 8*60*60*1000, isPreview };
+              hlsCache.set(fidCacheKey, entry);
+              resolve(entry);
+            } catch(e3) { reject(e3); }
+          })
+          .on("error", (e4) => { console.error("[HLS encode fallback failed]", e4.message); reject(e4); })
+          .run();
+      })
       .run();
   });
+
+  encodeInProgress.set(fidCacheKey, encodePromise);
+  try {
+    const result = await encodePromise;
+    encodeInProgress.delete(fidCacheKey);
+    return rewritePlaylistForToken(result, token);
+  } catch(e) {
+    encodeInProgress.delete(fidCacheKey);
+    throw e;
+  }
+}
+
+// Segment URL'lerini bu token ile yeniden yaz (her kullanıcı kendi token'ını görür)
+function rewritePlaylistForToken(cached, token) {
+  const playlist = cached.rawPlaylist.replace(/^([^\s#][^\n]*\.ts)$/gm, (_, segRelFile) => {
+    const segBase = pt.basename(segRelFile);
+    return "/hls/" + encodeURIComponent(token) + "/" + encodeURIComponent(segBase);
+  });
+  return { ...cached, playlist };
 }
 
 // ─── MIDDLEWARE ───────────────────────────────────────────────────────────────
@@ -461,12 +526,9 @@ app.get("/hls/:token/playlist.m3u8", blockDlMgr, hlsLimiter, async (req, res) =>
 });
 
 // ─── HLS SEGMENT ──────────────────────────────────────────────────────────────
-// GET /hls/:token/:segFile.ts
-// Her segment isteği token + session ile doğrulanır
 app.get("/hls/:token/:segFile", blockDlMgr, (req, res) => {
   const { token, segFile } = req.params;
 
-  // Path traversal engelle
   if (!/^[a-zA-Z0-9_-]+\.ts$/.test(segFile)) return res.status(400).end();
 
   const clientIp = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.socket.remoteAddress;
@@ -476,13 +538,13 @@ app.get("/hls/:token/:segFile", blockDlMgr, (req, res) => {
   const ipMatch = td.ip === clientIp || td.ip === clientIp?.replace("::ffff:","") || clientIp === "::ffff:"+td.ip || td.ip === "::1" || clientIp === "::1";
   if (!ipMatch) return res.status(403).end();
 
-  // Bu segment bu token'ın session cache'inde mi?
-  const cacheKey = td.fid + ":" + (td.isPreview ? "p" : "f") + ":" + token;
-  const session  = hlsCache.get(cacheKey);
+  // fid-based cache key (token değil)
+  const fidCacheKey = td.fid + ":" + (td.isPreview ? "p" : "f");
+  const session = hlsCache.get(fidCacheKey);
   if (!session) return res.status(404).end();
 
   const segPath = pt.join(DIRS.hls, segFile);
-  if (!session.segPaths.includes(segPath)) return res.status(403).end(); // Bu token'a ait değil
+  if (!session.segPaths.includes(segPath)) return res.status(403).end();
   if (!fs.existsSync(segPath)) return res.status(404).end();
 
   const stat = fs.statSync(segPath);
